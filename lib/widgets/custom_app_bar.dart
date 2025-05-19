@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final bool showSearchBar;
   final int cartItemCount;
   final VoidCallback onCartTap;
   final VoidCallback onAccountTap;
@@ -10,33 +9,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     required this.title,
-    this.showSearchBar = false,
-    this.cartItemCount = 0,
+    required this.cartItemCount,
     required this.onCartTap,
     required this.onAccountTap,
   }) : super(key: key);
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(title),
       actions: [
-        if (showSearchBar)
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(context: context, delegate: CustomSearchDelegate());
-            },
-          ),
         IconButton(
-          icon: const Icon(Icons.person_outline),
-          onPressed: onAccountTap,
+          icon: const Icon(Icons.search),
+          onPressed: () {
+            Navigator.pushNamed(context, '/products');
+          },
         ),
         Stack(
-          alignment: Alignment.center,
           children: [
             IconButton(
               icon: const Icon(Icons.shopping_cart_outlined),
@@ -58,60 +47,24 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   child: Text(
                     cartItemCount.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
               ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // This would typically query a database or filter a list
-    return Center(child: Text('Search results for: $query'));
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // This would typically show search suggestions
-    return ListView(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.search),
-          title: Text('Search for "$query"'),
-          onTap: () {
-            showResults(context);
-          },
+        IconButton(
+          icon: const Icon(Icons.person_outline),
+          onPressed: onAccountTap,
         ),
       ],
     );
   }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

@@ -17,7 +17,7 @@ class BottomNavBar extends StatelessWidget {
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Theme.of(context).primaryColor,
-      unselectedItemColor: Colors.grey,
+      unselectedItemColor: Colors.grey[600],
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),
@@ -25,9 +25,9 @@ class BottomNavBar extends StatelessWidget {
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.category_outlined),
-          activeIcon: Icon(Icons.category),
-          label: 'Categories',
+          icon: Icon(Icons.grid_view_outlined),
+          activeIcon: Icon(Icons.grid_view),
+          label: 'Products',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.favorite_outline),
