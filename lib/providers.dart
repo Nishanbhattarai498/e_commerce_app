@@ -3,10 +3,27 @@ import 'package:provider/provider.dart';
 import 'services/supabase_service.dart';
 import 'services/product_service.dart';
 import 'services/cart_service.dart';
+import 'services/auth_service.dart';
+import 'services/order_service.dart';
+import 'services/address_service.dart';
 
 Future<void> initializeServices() async {
-  final supabaseService = SupabaseService();
-  await supabaseService.initialize();
+  try {
+    final supabaseService = SupabaseService();
+    await supabaseService.initialize();
+    
+    // Initialize other services if needed
+    final authService = AuthService(supabaseService);
+    final productService = ProductService(supabaseService);
+    final cartService = CartService(supabaseService, productService);
+    final orderService = OrderService(supabaseService);
+    final addressService = AddressService(supabaseService);
+    
+    // You can add any additional initialization logic here
+  } catch (e) {
+    print('Error initializing services: $e');
+    rethrow;
+  }
 }
 
 class AppProviders extends StatelessWidget {
@@ -21,17 +38,25 @@ class AppProviders extends StatelessWidget {
         Provider<SupabaseService>(
           create: (_) => SupabaseService(),
         ),
+        ProxyProvider<SupabaseService, AuthService>(
+          update: (_, supabaseService, __) => AuthService(supabaseService),
+        ),
         ProxyProvider<SupabaseService, ProductService>(
           update: (_, supabaseService, __) => ProductService(supabaseService),
         ),
-        ChangeNotifierProxyProvider2<SupabaseService, ProductService,
-            CartService>(
+        ChangeNotifierProxyProvider2<SupabaseService, ProductService, CartService>(
           create: (context) => CartService(
             Provider.of<SupabaseService>(context, listen: false),
             Provider.of<ProductService>(context, listen: false),
           ),
           update: (_, supabaseService, productService, previous) =>
               previous ?? CartService(supabaseService, productService),
+        ),
+        ProxyProvider<SupabaseService, OrderService>(
+          update: (_, supabaseService, __) => OrderService(supabaseService),
+        ),
+        ProxyProvider<SupabaseService, AddressService>(
+          update: (_, supabaseService, __) => AddressService(supabaseService),
         ),
       ],
       child: child,

@@ -13,29 +13,41 @@ import 'screens/account_screen.dart';
 import 'services/cart_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+    // Load environment variables
+    await dotenv.load(fileName: ".env");
 
-  // Initialize Supabase
-  final supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+    // Initialize Supabase
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
-  if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception(
-        'Missing Supabase credentials. Please check your .env file.');
+    if (supabaseUrl == null || supabaseAnonKey == null) {
+      throw Exception(
+          'Missing Supabase credentials. Please check your .env file.');
+    }
+
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+
+    // Initialize services
+    await initializeServices();
+
+    runApp(const MyApp());
+  } catch (e) {
+    print('Error initializing app: $e');
+    // You might want to show an error screen here
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Error initializing app: $e'),
+        ),
+      ),
+    ));
   }
-
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
-
-  // Initialize services
-  await initializeServices();
-
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -89,7 +101,7 @@ class MyApp extends StatelessWidget {
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
-          cardTheme: CardThemeData(
+          cardTheme: CardTheme(
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),

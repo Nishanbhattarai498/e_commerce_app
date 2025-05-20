@@ -1,155 +1,97 @@
 import 'package:flutter/foundation.dart';
-import 'package:postgrest/src/postgrest_builder.dart';
-import 'package:postgrest/src/types.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
-import '../models/category.dart';
+import '../models/category.dart' as app_models;
 import 'supabase_service.dart';
 
-class ProductService {
+class ProductService extends ChangeNotifier {
   final SupabaseService _supabaseService;
+  List<Product> _products = [];
+  bool _isLoading = false;
 
   ProductService(this._supabaseService);
 
-  Future<List<Product>> getProducts({
-    int? limit,
-    int? offset,
+  List<Product> get products => _products;
+  bool get isLoading => _isLoading;
+
+  Future<List<Product>> fetchProducts({
     String? searchQuery,
     int? categoryId,
-    String? sortBy,
     bool? isFeatured,
+    String? sortBy,
+    bool? sortAscending,
+    int offset = 0,
+    int limit = 10,
   }) async {
+    _isLoading = true;
+    notifyListeners();
+
     try {
-      PostgrestTransformBuilder<PostgrestList> query = _supabaseService.client
-          .from('products')
-          .select('*, category:categories(*)');
-
+      var query = _supabaseService.client.from('products').select();
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.ilike('name', '%$searchQuery%');
+        query = query.like('name', '%$searchQuery%');
       }
-
       if (categoryId != null) {
         query = query.eq('category_id', categoryId);
       }
-
       if (isFeatured != null) {
         query = query.eq('is_featured', isFeatured);
       }
-
       if (sortBy != null) {
-        switch (sortBy) {
-          case 'price_asc':
-            query = query.order('price', ascending: true);
-            break;
-          case 'price_desc':
-            query = query.order('price', ascending: false);
-            break;
-          case 'name_asc':
-            query = query.order('name', ascending: true);
-            break;
-          case 'name_desc':
-            query = query.order('name', ascending: false);
-            break;
-          case 'rating':
-            query = query.order('rating', ascending: false);
-            break;
-          default:
-            query = query.order('created_at', ascending: false);
-        }
-      } else {
-        query = query.order('created_at', ascending: false);
+        query = query.order(sortBy, ascending: sortAscending ?? true);
       }
-
-      if (limit != null) {
-        query = query.limit(limit);
-      }
-
-      if (offset != null) {
-        query = query.range(offset, offset + (limit ?? 10) - 1);
-      }
-
       final data = await query;
-
-      return data.map<Product>((json) => Product.fromJson(json)).toList();
+      List<Product> products = data.map((json) => Product.fromJson(json)).toList();
+      // Paginate in Dart
+      final paginated = products.skip(offset).take(limit).toList();
+      _products = paginated;
+      return _products;
     } catch (e) {
       debugPrint('Error fetching products: $e');
-      rethrow;
+      return [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  Future<Product> getProductById(int id) async {
+  Future<Product?> getProductById(int id) async {
     try {
-      final data = await _supabaseService.client
+      final response = await _supabaseService.client
           .from('products')
           .select('*, category:categories(*)')
           .eq('id', id)
           .single();
-
-      final product = Product.fromJson(data);
-
-      // Fetch product images
-      final images = await _supabaseService.client
-          .from('product_images')
-          .select('*')
-          .eq('product_id', id)
-          .order('display_order', ascending: true);
-
-      product.images =
-          images.map<String>((json) => json['image_url'] as String).toList();
-
-      // Fetch product variants
-      final variants = await _supabaseService.client
-          .from('product_variants')
-          .select('*')
-          .eq('product_id', id);
-
-      // Group variants by name
-      final Map<String, List<String>> variantMap = {};
-      for (final variant in variants) {
-        final name = variant['name'] as String;
-        final value = variant['value'] as String;
-
-        if (!variantMap.containsKey(name)) {
-          variantMap[name] = [];
-        }
-
-        variantMap[name]!.add(value);
-      }
-
-      product.variants = variantMap;
-
-      return product;
+      return Product.fromJson(response);
     } catch (e) {
-      debugPrint('Error fetching product by id: $e');
-      rethrow;
+      debugPrint('Error fetching product by ID: $e');
+      return null;
     }
   }
 
-  Future<List<Category>> getCategories() async {
+  Future<List<app_models.Category>> getCategories() async {
     try {
-      final data = await _supabaseService.client
+      final response = await _supabaseService.client
           .from('categories')
-          .select('*')
-          .order('name', ascending: true);
-
-      return data.map<Category>((json) => Category.fromJson(json)).toList();
+          .select();
+      return response.map((json) => app_models.Category.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error fetching categories: $e');
-      rethrow;
+      return [];
     }
   }
 
-  Future<Category> getCategoryById(int id) async {
+  Future<app_models.Category?> getCategoryById(int id) async {
     try {
-      final data = await _supabaseService.client
+      final response = await _supabaseService.client
           .from('categories')
-          .select('*')
+          .select()
           .eq('id', id)
           .single();
-
-      return Category.fromJson(data);
+      return app_models.Category.fromJson(response);
     } catch (e) {
-      debugPrint('Error fetching category by id: $e');
-      rethrow;
+      debugPrint('Error fetching category by ID: $e');
+      return null;
     }
   }
 }

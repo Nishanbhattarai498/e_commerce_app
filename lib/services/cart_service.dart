@@ -1,29 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/cart.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
 import 'supabase_service.dart';
-import 'product_service.dart';
 
 class CartService extends ChangeNotifier {
   final SupabaseService _supabaseService;
-  final ProductService _productService;
 
   Cart? _cart;
   bool _isLoading = false;
 
-  CartService(this._supabaseService, this._productService);
+  CartService(this._supabaseService);
 
   Cart? get cart => _cart;
   bool get isLoading => _isLoading;
 
   int get itemCount =>
-      _cart?.items.fold(0, (sum, item) => sum + item.quantity) ?? 0;
+      _cart?.items.fold<int>(0, (sum, item) => sum + item.quantity) ?? 0;
 
   double get subtotal =>
-      _cart?.items
-          .fold(0, (sum, item) => sum + (item.product.price * item.quantity)) ??
+      _cart?.items.fold<double>(
+          0, (sum, item) => sum + (item.product.price * item.quantity)) ??
       0;
 
   double get tax => subtotal * 0.1; // 10% tax
@@ -49,17 +48,15 @@ class CartService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Check if user has a cart
       final cartData = await _supabaseService.client
           .from('carts')
-          .select('*')
+          .select()
           .eq('user_id', _supabaseService.currentUser!.id)
           .maybeSingle();
 
       String cartId;
 
       if (cartData == null) {
-        // Create a new cart
         final newCart = {
           'user_id': _supabaseService.currentUser!.id,
         };
@@ -70,28 +67,26 @@ class CartService extends ChangeNotifier {
             .select()
             .single();
 
-        cartId = result['id'];
+        cartId = result['id'].toString();
       } else {
-        cartId = cartData['id'];
+        cartId = cartData['id'].toString();
       }
 
-      // Get cart items
       final cartItemsData = await _supabaseService.client
           .from('cart_items')
           .select('*, product:products(*)')
           .eq('cart_id', cartId);
 
       final items = await Future.wait(
-        cartItemsData.map<Future<CartItem>>((item) async {
+        (cartItemsData as List).map((item) async {
           final product = Product.fromJson(item['product']);
-
           return CartItem(
-            id: item['id'],
-            cartId: cartId,
+            id: item['id'] is int ? item['id'] : int.tryParse(item['id'].toString()) ?? 0,
+            cartId: item['cart_id'].toString(),
             product: product,
-            quantity: item['quantity'],
+            quantity: item['quantity'] is int ? item['quantity'] : int.tryParse(item['quantity'].toString()) ?? 1,
             variantOptions: item['variant_options'] != null
-                ? Map<String, String>.from(item['variant_options'])
+                ? Map<String, String>.from(item['variant_options'] as Map)
                 : {},
           );
         }).toList(),
@@ -109,7 +104,6 @@ class CartService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error loading cart: $e');
 
-      // Create an empty cart if there's an error
       _cart = Cart(
         id: const Uuid().v4(),
         userId: _supabaseService.currentUser?.id ?? '',
@@ -133,11 +127,14 @@ class CartService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Check if item already exists in cart
+      // Check if item already exists in cart with same variant options
       final existingItemIndex = _cart!.items.indexWhere(
         (item) =>
             item.product.id == product.id &&
-            _areVariantOptionsEqual(item.variantOptions, variantOptions),
+            _areVariantOptionsEqual(
+              item.variantOptions,
+              variantOptions,
+            ),
       );
 
       if (existingItemIndex != -1) {
@@ -148,15 +145,16 @@ class CartService extends ChangeNotifier {
         if (_supabaseService.isAuthenticated) {
           await _supabaseService.client
               .from('cart_items')
-              .update({'quantity': newQuantity}).eq('id', existingItem.id);
+              .update({'quantity': newQuantity})
+              .eq('id', existingItem.id);
         }
 
         _cart!.items[existingItemIndex] = CartItem(
           id: existingItem.id,
           cartId: existingItem.cartId,
-          product: existingItem.product,
+          product: product,
           quantity: newQuantity,
-          variantOptions: existingItem.variantOptions,
+          variantOptions: variantOptions,
         );
       } else {
         // Add new item
@@ -175,7 +173,7 @@ class CartService extends ChangeNotifier {
               .single();
 
           _cart!.items.add(CartItem(
-            id: result['id'],
+            id: result['id'] is int ? result['id'] : int.tryParse(result['id'].toString()) ?? 0,
             cartId: _cart!.id,
             product: product,
             quantity: quantity,

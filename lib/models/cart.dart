@@ -1,4 +1,5 @@
 import 'product.dart';
+import 'cart_item.dart';
 
 class Cart {
   final String id;
@@ -58,73 +59,6 @@ class Cart {
       items: items ?? this.items,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
-    );
-  }
-}
-
-class CartItem {
-  final int id;
-  final String cartId;
-  final int productId;
-  final int quantity;
-  final Map<String, dynamic>? variantOptions;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final Product? product;
-
-  CartItem({
-    required this.id,
-    required this.cartId,
-    required this.productId,
-    required this.quantity,
-    this.variantOptions,
-    required this.createdAt,
-    required this.updatedAt,
-    this.product,
-  });
-
-  factory CartItem.fromJson(Map<String, dynamic> json, {Product? product}) {
-    return CartItem(
-      id: json['id'],
-      cartId: json['cart_id'],
-      productId: json['product_id'],
-      quantity: json['quantity'],
-      variantOptions: json['variant_options'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      product: product,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'cart_id': cartId,
-      'product_id': productId,
-      'quantity': quantity,
-      'variant_options': variantOptions,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
-  }
-
-  double get unitPrice => product?.price ?? 0;
-
-  double get totalPrice => unitPrice * quantity;
-
-  CartItem copyWith({
-    int? quantity,
-    Map<String, dynamic>? variantOptions,
-  }) {
-    return CartItem(
-      id: id,
-      cartId: cartId,
-      productId: productId,
-      quantity: quantity ?? this.quantity,
-      variantOptions: variantOptions ?? this.variantOptions,
-      createdAt: createdAt,
-      updatedAt: DateTime.now(),
-      product: product,
     );
   }
 }

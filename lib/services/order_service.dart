@@ -1,12 +1,20 @@
 import 'package:flutter/foundation.dart';
 import '../models/order.dart';
-import '../models/cart.dart';
 import 'supabase_service.dart';
 import 'cart_service.dart';
+import 'product_service.dart';
 
 class OrderService extends ChangeNotifier {
-  final SupabaseService _supabaseService = SupabaseService();
-  final CartService _cartService = CartService();
+  final SupabaseService _supabaseService;
+  final CartService _cartService;
+
+  OrderService()
+      : _supabaseService = SupabaseService(),
+        _cartService = CartService(
+          SupabaseService(),
+          ProductService(SupabaseService()),
+        );
+
   List<Order> _orders = [];
   bool _isLoading = false;
 
@@ -109,9 +117,9 @@ class OrderService extends ChangeNotifier {
         cart.items
             .map((item) => _supabaseService.client.from('order_items').insert({
                   'order_id': orderId,
-                  'product_id': item.productId,
-                  'product_name': item.product?.name ?? 'Unknown Product',
-                  'price': item.unitPrice,
+                  'product_id': item.product.id,
+                  'product_name': item.product.name,
+                  'price': item.product.price,
                   'quantity': item.quantity,
                   'variant_options': item.variantOptions,
                 })),
