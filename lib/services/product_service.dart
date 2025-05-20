@@ -26,24 +26,23 @@ class ProductService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      var query = _supabaseService.client.from('products').select();
+      var baseQuery = _supabaseService.client.from('products').select();
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.like('name', '%$searchQuery%');
+        baseQuery = baseQuery.like('name', '%$searchQuery%');
       }
       if (categoryId != null) {
-        query = query.eq('category_id', categoryId);
+        baseQuery = baseQuery.eq('category_id', categoryId);
       }
       if (isFeatured != null) {
-        query = query.eq('is_featured', isFeatured);
+        baseQuery = baseQuery.eq('is_featured', isFeatured);
       }
-      List data;
+      dynamic data;
       if (sortBy != null) {
-        data = await query.order(sortBy, ascending: sortAscending ?? true);
+        data = await baseQuery.order(sortBy, ascending: sortAscending ?? true);
       } else {
-        data = await query;
+        data = await baseQuery;
       }
-      List<Product> products = data.map((json) => Product.fromJson(json)).toList();
-      // Paginate in Dart
+      List<Product> products = (data as List).map((json) => Product.fromJson(json)).toList();
       final paginated = products.skip(offset).take(limit).toList();
       _products = paginated;
       return _products;

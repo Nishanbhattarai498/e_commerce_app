@@ -127,10 +127,9 @@ class CartService extends ChangeNotifier {
 
     try {
       // Check if item already exists in cart with same variant options
-      final existingItemIndex = _cart!.items.indexWhere((item) {
-        return item.product.id == product.id &&
-            _areVariantOptionsEqual(item.variantOptions, variantOptions);
-      });
+      final existingItemIndex = _cart!.items.indexWhere((item) =>
+          item.product.id == product.id &&
+          _areVariantOptionsEqual(item.variantOptions, variantOptions));
 
       if (existingItemIndex != -1) {
         // Update quantity

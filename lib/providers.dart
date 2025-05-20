@@ -13,7 +13,7 @@ Future<void> initializeServices() async {
     await supabaseService.initialize();
     // You can add any additional initialization logic here
   } catch (e) {
-    print('Error initializing services: $e');
+    print('Error initializing services');
     rethrow;
   }
 }
