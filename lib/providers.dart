@@ -15,8 +15,8 @@ Future<void> initializeServices() async {
     // Initialize other services if needed
     final authService = AuthService(supabaseService);
     final productService = ProductService(supabaseService);
-    final cartService = CartService(supabaseService, productService);
-    final orderService = OrderService(supabaseService);
+    final cartService = CartService(supabaseService);
+    final orderService = OrderService(supabaseService, cartService: cartService);
     final addressService = AddressService(supabaseService);
     
     // You can add any additional initialization logic here
@@ -44,16 +44,15 @@ class AppProviders extends StatelessWidget {
         ProxyProvider<SupabaseService, ProductService>(
           update: (_, supabaseService, __) => ProductService(supabaseService),
         ),
-        ChangeNotifierProxyProvider2<SupabaseService, ProductService, CartService>(
+        ChangeNotifierProxyProvider<SupabaseService, CartService>(
           create: (context) => CartService(
             Provider.of<SupabaseService>(context, listen: false),
-            Provider.of<ProductService>(context, listen: false),
           ),
-          update: (_, supabaseService, productService, previous) =>
-              previous ?? CartService(supabaseService, productService),
+          update: (_, supabaseService, previous) =>
+              previous ?? CartService(supabaseService),
         ),
-        ProxyProvider<SupabaseService, OrderService>(
-          update: (_, supabaseService, __) => OrderService(supabaseService),
+        ProxyProvider2<SupabaseService, CartService, OrderService>(
+          update: (_, supabaseService, cartService, __) => OrderService(supabaseService, cartService: cartService),
         ),
         ProxyProvider<SupabaseService, AddressService>(
           update: (_, supabaseService, __) => AddressService(supabaseService),

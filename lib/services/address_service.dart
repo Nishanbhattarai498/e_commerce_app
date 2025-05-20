@@ -3,9 +3,11 @@ import '../models/address.dart';
 import 'supabase_service.dart';
 
 class AddressService extends ChangeNotifier {
-  final SupabaseService _supabaseService = SupabaseService();
+  final SupabaseService _supabaseService;
   List<Address> _addresses = [];
   bool _isLoading = false;
+
+  AddressService(this._supabaseService);
 
   bool get isLoading => _isLoading;
   List<Address> get addresses => _addresses;

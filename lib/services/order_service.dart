@@ -6,14 +6,11 @@ import 'product_service.dart';
 
 class OrderService extends ChangeNotifier {
   final SupabaseService _supabaseService;
-  final CartService _cartService;
+  late final CartService _cartService;
 
-  OrderService()
-      : _supabaseService = SupabaseService(),
-        _cartService = CartService(
-          SupabaseService(),
-          ProductService(SupabaseService()),
-        );
+  OrderService(this._supabaseService, {CartService? cartService}) {
+    _cartService = cartService ?? CartService(_supabaseService, ProductService(_supabaseService));
+  }
 
   List<Order> _orders = [];
   bool _isLoading = false;
