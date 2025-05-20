@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/product_service.dart';
-import '../models/product.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/product_card.dart';
@@ -21,13 +20,16 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   bool _ascending = false;
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    // Fetch products when the screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchProducts();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _fetchProducts();
+      final productService = Provider.of<ProductService>(context, listen: false);
+      _categories = await productService.getCategories();
+      setState(() {});
     });
   }
 
@@ -43,7 +45,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
       categoryId: _selectedCategoryId,
       searchQuery: _searchQuery,
       sortBy: _sortBy,
-      ascending: _ascending,
+      sortAscending: _ascending,
     );
   }
 
@@ -125,14 +127,10 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
           ),
 
           // Category Filter
-          Consumer<ProductService>(
-            builder: (context, productService, _) {
-              return CategoryFilter(
-                categories: productService.categories,
-                selectedCategoryId: _selectedCategoryId,
-                onCategorySelected: _onCategorySelected,
-              );
-            },
+          CategoryFilter(
+            categories: _categories,
+            selectedCategoryId: _selectedCategoryId,
+            onCategorySelected: _onCategorySelected,
           ),
 
           // Sort Options

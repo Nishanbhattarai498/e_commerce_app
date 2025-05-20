@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
 import '../models/cart.dart';
+import '../models/cart_item.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -20,7 +21,7 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
     // Fetch cart when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CartService>(context, listen: false).fetchCart();
+      Provider.of<CartService>(context, listen: false).loadCart();
     });
   }
 
@@ -327,9 +328,9 @@ class _CartScreenState extends State<CartScreen> {
                               icon: const Icon(Icons.remove, size: 16),
                               onPressed: item.quantity > 1
                                   ? () {
-                                      cartService.updateCartItem(
-                                        itemId: item.id,
-                                        quantity: item.quantity - 1,
+                                      cartService.updateCartItemQuantity(
+                                        item,
+                                        item.quantity - 1,
                                       );
                                     }
                                   : null,
@@ -348,9 +349,9 @@ class _CartScreenState extends State<CartScreen> {
                             IconButton(
                               icon: const Icon(Icons.add, size: 16),
                               onPressed: () {
-                                cartService.updateCartItem(
-                                  itemId: item.id,
-                                  quantity: item.quantity + 1,
+                                cartService.updateCartItemQuantity(
+                                  item,
+                                  item.quantity + 1,
                                 );
                               },
                               constraints: const BoxConstraints(
@@ -366,7 +367,7 @@ class _CartScreenState extends State<CartScreen> {
                       IconButton(
                         icon: const Icon(Icons.delete_outline),
                         onPressed: () {
-                          cartService.removeFromCart(item.id);
+                          cartService.removeFromCart(item);
                         },
                         color: Colors.red,
                       ),

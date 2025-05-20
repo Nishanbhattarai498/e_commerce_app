@@ -55,15 +55,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
         // Initialize selected variants if not already done
         if (_selectedVariants.isEmpty && product.variants.isNotEmpty) {
-          final variantNames =
-              product.variants.map((v) => v.name).toSet().toList();
+          final variantNames = product.variants.keys.toList();
 
           for (final name in variantNames) {
-            final variants =
-                product.variants.where((v) => v.name == name).toList();
+            final options = product.variants[name] ?? [];
 
-            if (variants.isNotEmpty) {
-              _selectedVariants[name] = variants.first.value;
+            if (options.isNotEmpty) {
+              _selectedVariants[name] = options.first;
             }
           }
         }
@@ -96,15 +94,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       items: product.images.isEmpty
                           ? [
                               Image.network(
-                                product.imageUrl ??
-                                    'https://via.placeholder.com/300',
+                                product.imageUrl,
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                               ),
                             ]
-                          : product.images.map((image) {
+                          : product.images.map((url) {
                               return Image.network(
-                                image.imageUrl,
+                                url,
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                               );
@@ -381,155 +378,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       const SizedBox(height: 8),
 
                       // Review summary
-                      FutureBuilder<List<dynamic>>(
-                        future: Future.wait([
-                          Provider.of<ProductService>(context, listen: false)
-                              .getProductReviews(product.id),
-                        ]),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-
-                          if (snapshot.hasError || !snapshot.hasData) {
-                            return const Text('Error loading reviews');
-                          }
-
-                          final reviews = snapshot.data![0];
-
-                          if (reviews.isEmpty) {
-                            return const Text('No reviews yet');
-                          }
-
-                          return Column(
-                            children: [
-                              // Review stats
-                              Row(
-                                children: [
-                                  Text(
-                                    product.rating.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 48,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: List.generate(5, (index) {
-                                          return Icon(
-                                            index < product.rating.floor()
-                                                ? Icons.star
-                                                : index < product.rating
-                                                    ? Icons.star_half
-                                                    : Icons.star_border,
-                                            color: Colors.amber,
-                                            size: 20,
-                                          );
-                                        }),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Based on ${reviews.length} reviews',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Sample review
-                              if (reviews.isNotEmpty)
-                                Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            CircleAvatar(
-                                              backgroundImage: reviews[0]
-                                                          .userAvatarUrl !=
-                                                      null
-                                                  ? NetworkImage(
-                                                      reviews[0].userAvatarUrl!)
-                                                  : null,
-                                              child: reviews[0].userAvatarUrl ==
-                                                      null
-                                                  ? const Icon(Icons.person)
-                                                  : null,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  reviews[0].userFullName ??
-                                                      'Anonymous',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  reviews[0]
-                                                      .createdAt
-                                                      .toString()
-                                                      .substring(0, 10),
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const Spacer(),
-                                            Row(
-                                              children:
-                                                  List.generate(5, (index) {
-                                                return Icon(
-                                                  index < reviews[0].rating
-                                                      ? Icons.star
-                                                      : Icons.star_border,
-                                                  color: Colors.amber,
-                                                  size: 16,
-                                                );
-                                              }),
-                                            ),
-                                          ],
-                                        ),
-                                        if (reviews[0].title != null) ...[
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            reviews[0].title!,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                        if (reviews[0].content != null) ...[
-                                          const SizedBox(height: 4),
-                                          Text(reviews[0].content!),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
+                      const Text('Reviews are not implemented yet.'),
                     ],
                   ),
                 ),
@@ -563,14 +412,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   List<Widget> _buildVariantSelectors(Product product) {
-    final variantNames = product.variants.map((v) => v.name).toSet().toList();
+    final variantNames = product.variants.keys.toList();
 
     return variantNames.map((name) {
-      final variants = product.variants
-          .where((v) => v.name == name)
-          .map((v) => v.value)
-          .toSet()
-          .toList();
+      final options = product.variants[name] ?? [];
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +430,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: variants.map((value) {
+            children: options.map((value) {
               final isSelected = _selectedVariants[name] == value;
 
               return ChoiceChip(
@@ -618,13 +463,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     try {
       final cartService = Provider.of<CartService>(context, listen: false);
 
-      await cartService.addToCart(
-        product: product,
-        quantity: _quantity,
-        variantOptions: _selectedVariants.isNotEmpty
-            ? _selectedVariants.map((key, value) => MapEntry(key, value))
-            : null,
-      );
+      await cartService.addToCart(product, _quantity, _selectedVariants);
 
       if (buyNow) {
         Navigator.pushNamed(context, '/cart');

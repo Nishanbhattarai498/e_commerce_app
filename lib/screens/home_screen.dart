@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../services/product_service.dart';
-import '../models/product.dart';
 import '../models/category.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -18,15 +17,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   int _currentBannerIndex = 0;
+  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    // Fetch featured products when the screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final productService =
-          Provider.of<ProductService>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final productService = Provider.of<ProductService>(context, listen: false);
       productService.fetchProducts(isFeatured: true);
+      _categories = await productService.getCategories();
+      setState(() {});
     });
   }
 
@@ -165,19 +165,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: productService.categories.length,
+                      itemCount: _categories.length,
                       itemBuilder: (context, index) {
-                        final category = productService.categories[index];
+                        final category = _categories[index];
                         return _buildCategoryCard(
                           context,
                           category,
-                          () {
-                            Navigator.pushNamed(
-                              context,
-                              '/products',
-                              arguments: {'categoryId': category.id},
-                            );
-                          },
+                          () => Navigator.pushNamed(context, '/products', arguments: category),
                         );
                       },
                     ),
@@ -186,23 +180,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Featured Products
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Featured Products',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/products');
-                          },
-                          child: const Text('See All'),
-                        ),
-                      ],
+                    child: const Text(
+                      'Featured Products',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
 
@@ -210,74 +193,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.7,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
+                      childAspectRatio: 0.75,
                     ),
                     itemCount: productService.products.length,
                     itemBuilder: (context, index) {
                       final product = productService.products[index];
-                      return ProductCard(
-                        product: product,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/product',
-                            arguments: product.id,
-                          );
-                        },
-                      );
+                      return ProductCard(product: product);
                     },
                   ),
-
-                  // Newsletter
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Subscribe to our Newsletter',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Get the latest updates on new products and upcoming sales',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Your email address',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.send),
-                                  onPressed: () {
-                                    // Subscribe to newsletter
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -291,95 +218,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBanner(
-    String title,
-    String subtitle,
-    String imageUrl,
-    VoidCallback onTap,
-  ) {
+  Widget _buildBanner(String title, String subtitle, String imageUrl, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: NetworkImage(imageUrl),
+      child: Stack(
+        children: [
+          Image.network(
+            imageUrl,
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
-              BlendMode.darken,
+            width: double.infinity,
+          ),
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onTap,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                ),
-                child: const Text('Shop Now'),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildCategoryCard(
-    BuildContext context,
-    Category category,
-    VoidCallback onTap,
-  ) {
+  Widget _buildCategoryCard(BuildContext context, Category category, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 100,
         margin: const EdgeInsets.only(right: 16),
+        width: 100,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[200],
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: category.imageUrl != null
-                  ? NetworkImage(category.imageUrl!)
-                  : null,
-              backgroundColor: Colors.grey[200],
-              child: category.imageUrl == null
-                  ? const Icon(
-                      Icons.category,
-                      size: 40,
-                      color: Colors.grey,
-                    )
-                  : null,
+            Icon(
+              Icons.category,
+              size: 40,
+              color: Theme.of(context).primaryColor,
             ),
             const SizedBox(height: 8),
             Text(
               category.name,
               textAlign: TextAlign.center,
               style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
