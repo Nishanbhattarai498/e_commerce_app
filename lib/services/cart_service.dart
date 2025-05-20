@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/cart.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
@@ -128,14 +127,10 @@ class CartService extends ChangeNotifier {
 
     try {
       // Check if item already exists in cart with same variant options
-      final existingItemIndex = _cart!.items.indexWhere(
-        (item) =>
-            item.product.id == product.id &&
-            _areVariantOptionsEqual(
-              item.variantOptions,
-              variantOptions,
-            ),
-      );
+      final existingItemIndex = _cart!.items.indexWhere((item) {
+        return item.product.id == product.id &&
+            _areVariantOptionsEqual(item.variantOptions, variantOptions);
+      });
 
       if (existingItemIndex != -1) {
         // Update quantity
@@ -256,7 +251,6 @@ class CartService extends ChangeNotifier {
   Future<void> clearCart() async {
     _isLoading = true;
     notifyListeners();
-
     try {
       if (_supabaseService.isAuthenticated) {
         await _supabaseService.client
@@ -264,7 +258,6 @@ class CartService extends ChangeNotifier {
             .delete()
             .eq('cart_id', _cart!.id);
       }
-
       _cart!.items.clear();
     } catch (e) {
       debugPrint('Error clearing cart: $e');
@@ -274,18 +267,12 @@ class CartService extends ChangeNotifier {
     }
   }
 
-  bool _areVariantOptionsEqual(
-      Map<String, String> options1, Map<String, String> options2) {
-    if (options1.length != options2.length) {
-      return false;
-    }
-
+  // Helper to compare variant options
+  bool _areVariantOptionsEqual(Map<String, String> options1, Map<String, String> options2) {
+    if (options1.length != options2.length) return false;
     for (final key in options1.keys) {
-      if (options1[key] != options2[key]) {
-        return false;
-      }
+      if (options1[key] != options2[key]) return false;
     }
-
     return true;
   }
 }

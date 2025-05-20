@@ -11,14 +11,6 @@ Future<void> initializeServices() async {
   try {
     final supabaseService = SupabaseService();
     await supabaseService.initialize();
-    
-    // Initialize other services if needed
-    final authService = AuthService(supabaseService);
-    final productService = ProductService(supabaseService);
-    final cartService = CartService(supabaseService);
-    final orderService = OrderService(supabaseService, cartService: cartService);
-    final addressService = AddressService(supabaseService);
-    
     // You can add any additional initialization logic here
   } catch (e) {
     print('Error initializing services: $e');
@@ -39,7 +31,7 @@ class AppProviders extends StatelessWidget {
           create: (_) => SupabaseService(),
         ),
         ProxyProvider<SupabaseService, AuthService>(
-          update: (_, supabaseService, __) => AuthService(supabaseService),
+          update: (_, supabaseService, __) => AuthService(),
         ),
         ProxyProvider<SupabaseService, ProductService>(
           update: (_, supabaseService, __) => ProductService(supabaseService),

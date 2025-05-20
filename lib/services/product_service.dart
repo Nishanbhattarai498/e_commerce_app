@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
 import '../models/category.dart' as app_models;
 import 'supabase_service.dart';
@@ -37,10 +36,12 @@ class ProductService extends ChangeNotifier {
       if (isFeatured != null) {
         query = query.eq('is_featured', isFeatured);
       }
+      List data;
       if (sortBy != null) {
-        query = query.order(sortBy, ascending: sortAscending ?? true);
+        data = await query.order(sortBy, ascending: sortAscending ?? true);
+      } else {
+        data = await query;
       }
-      final data = await query;
       List<Product> products = data.map((json) => Product.fromJson(json)).toList();
       // Paginate in Dart
       final paginated = products.skip(offset).take(limit).toList();

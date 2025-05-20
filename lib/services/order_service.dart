@@ -2,14 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../models/order.dart';
 import 'supabase_service.dart';
 import 'cart_service.dart';
-import 'product_service.dart';
 
 class OrderService extends ChangeNotifier {
   final SupabaseService _supabaseService;
   late final CartService _cartService;
 
   OrderService(this._supabaseService, {CartService? cartService}) {
-    _cartService = cartService ?? CartService(_supabaseService, ProductService(_supabaseService));
+    _cartService = cartService ?? CartService(_supabaseService);
   }
 
   List<Order> _orders = [];
