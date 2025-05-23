@@ -4,6 +4,7 @@ import '../services/cart_service.dart';
 import '../services/address_service.dart';
 import '../services/order_service.dart';
 import '../models/address.dart';
+import '../models/cart.dart';
 import '../widgets/custom_app_bar.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -310,15 +311,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                item.product?.primaryImageUrl ??
-                    'https://via.placeholder.com/50',
+                item.product.imageUrl,
                 width: 50,
                 height: 50,
                 fit: BoxFit.cover,
               ),
             ),
             title: Text(
-              item.product?.name ?? 'Unknown Product',
+              item.product.name,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
