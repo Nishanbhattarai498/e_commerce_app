@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
-import '../models/cart.dart';
 import '../models/cart_item.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -267,8 +266,7 @@ class _CartScreenState extends State<CartScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                item.product?.primaryImageUrl ??
-                    'https://via.placeholder.com/80',
+                item.product.imageUrl,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
@@ -282,7 +280,7 @@ class _CartScreenState extends State<CartScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.product?.name ?? 'Unknown Product',
+                    item.product.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -290,12 +288,11 @@ class _CartScreenState extends State<CartScreen> {
                   const SizedBox(height: 4),
 
                   // Variants
-                  if (item.variantOptions != null &&
-                      item.variantOptions!.isNotEmpty)
+                  if (item.variantOptions.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        item.variantOptions!.entries
+                        item.variantOptions.entries
                             .map((e) => '${e.key}: ${e.value}')
                             .join(', '),
                         style: TextStyle(
@@ -307,7 +304,7 @@ class _CartScreenState extends State<CartScreen> {
 
                   // Price
                   Text(
-                    '\$${item.unitPrice.toStringAsFixed(2)}',
+                    '\$${item.product.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),

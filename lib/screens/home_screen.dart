@@ -23,7 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final productService = Provider.of<ProductService>(context, listen: false);
+      final productService =
+          Provider.of<ProductService>(context, listen: false);
       productService.fetchProducts(isFeatured: true);
       _categories = await productService.getCategories();
       setState(() {});
@@ -171,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         return _buildCategoryCard(
                           context,
                           category,
-                          () => Navigator.pushNamed(context, '/products', arguments: category),
+                          () => Navigator.pushNamed(context, '/products',
+                              arguments: category),
                         );
                       },
                     ),
@@ -193,7 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
@@ -202,7 +205,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: productService.products.length,
                     itemBuilder: (context, index) {
                       final product = productService.products[index];
-                      return ProductCard(product: product);
+                      return ProductCard(
+                        product: product,
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/product',
+                            arguments: product.id,
+                          );
+                        },
+                      );
                     },
                   ),
                 ],
@@ -218,7 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBanner(String title, String subtitle, String imageUrl, VoidCallback onTap) {
+  Widget _buildBanner(
+      String title, String subtitle, String imageUrl, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Stack(
@@ -262,7 +275,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, Category category, VoidCallback onTap) {
+  Widget _buildCategoryCard(
+      BuildContext context, Category category, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(

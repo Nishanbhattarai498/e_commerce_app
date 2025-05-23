@@ -5,6 +5,7 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_filter.dart';
+import '../models/category.dart';
 
 class ProductListingScreen extends StatefulWidget {
   const ProductListingScreen({Key? key}) : super(key: key);
@@ -25,11 +26,15 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _fetchProducts();
-      final productService = Provider.of<ProductService>(context, listen: false);
-      _categories = await productService.getCategories();
-      setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchProducts();
+      final productService =
+          Provider.of<ProductService>(context, listen: false);
+      productService.getCategories().then((cats) {
+        setState(() {
+          _categories = cats;
+        });
+      });
     });
   }
 
