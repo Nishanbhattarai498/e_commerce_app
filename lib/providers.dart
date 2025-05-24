@@ -30,24 +30,37 @@ class AppProviders extends StatelessWidget {
         Provider<SupabaseService>(
           create: (_) => SupabaseService(),
         ),
-        ProxyProvider<SupabaseService, AuthService>(
-          update: (_, supabaseService, __) => AuthService(),
+        ChangeNotifierProxyProvider<SupabaseService, AuthService>(
+          create: (context) => AuthService(),
+          update: (_, supabaseService, previous) => previous ?? AuthService(),
         ),
-        ProxyProvider<SupabaseService, ProductService>(
-          update: (_, supabaseService, __) => ProductService(supabaseService),
+        ChangeNotifierProxyProvider<SupabaseService, ProductService>(
+          create: (context) => ProductService(
+              Provider.of<SupabaseService>(context, listen: false)),
+          update: (_, supabaseService, previous) =>
+              previous ?? ProductService(supabaseService),
         ),
         ChangeNotifierProxyProvider<SupabaseService, CartService>(
-          create: (context) => CartService(
-            Provider.of<SupabaseService>(context, listen: false),
-          ),
+          create: (context) =>
+              CartService(Provider.of<SupabaseService>(context, listen: false)),
           update: (_, supabaseService, previous) =>
               previous ?? CartService(supabaseService),
         ),
-        ProxyProvider2<SupabaseService, CartService, OrderService>(
-          update: (_, supabaseService, cartService, __) => OrderService(supabaseService, cartService: cartService),
+        ChangeNotifierProxyProvider2<SupabaseService, CartService,
+            OrderService>(
+          create: (context) => OrderService(
+            Provider.of<SupabaseService>(context, listen: false),
+            cartService: Provider.of<CartService>(context, listen: false),
+          ),
+          update: (_, supabaseService, cartService, previous) =>
+              previous ??
+              OrderService(supabaseService, cartService: cartService),
         ),
-        ProxyProvider<SupabaseService, AddressService>(
-          update: (_, supabaseService, __) => AddressService(supabaseService),
+        ChangeNotifierProxyProvider<SupabaseService, AddressService>(
+          create: (context) => AddressService(
+              Provider.of<SupabaseService>(context, listen: false)),
+          update: (_, supabaseService, previous) =>
+              previous ?? AddressService(supabaseService),
         ),
       ],
       child: child,
