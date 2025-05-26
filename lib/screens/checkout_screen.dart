@@ -91,7 +91,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           // If no address is selected, select the default one
           if (_selectedAddress == null && addressService.addresses.isNotEmpty) {
             _selectedAddress = addressService.defaultAddress;
-          }          return Container(
+          }
+          return Container(
             color: Colors.grey[50],
             child: Column(
               children: [
@@ -119,7 +120,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
-                        if (_currentStep == 0) _buildModernShippingStep(addressService),
+                        if (_currentStep == 0)
+                          _buildModernShippingStep(addressService),
                         if (_currentStep == 1) _buildModernPaymentStep(),
                         if (_currentStep == 2) _buildModernReviewStep(cart),
                         const SizedBox(height: 100),
@@ -148,288 +150,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildShippingAddressStep(AddressService addressService) {
-    if (addressService.addresses.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'You don\'t have any saved addresses.',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/account');
-            },
-            child: const Text('Add Address'),
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Select a shipping address:',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...addressService.addresses.map((address) {
-          return RadioListTile<Address>(
-            title: Text(address.name),
-            subtitle: Text(address.formattedAddress),
-            value: address,
-            groupValue: _selectedAddress,
-            onChanged: (value) {
-              setState(() {
-                _selectedAddress = value;
-              });
-            },
-            secondary: address.isDefault
-                ? const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                  )
-                : null,
-          );
-        }).toList(),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.pushNamed(context, '/account');
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Add New Address'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPaymentMethodStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Select a payment method:',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        RadioListTile<String>(
-          title: const Text('Credit Card'),
-          subtitle:
-              const Text('Pay with Visa, Mastercard, or American Express'),
-          value: 'Credit Card',
-          groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() {
-              _paymentMethod = value!;
-            });
-          },
-          secondary: const Icon(Icons.credit_card),
-        ),
-        RadioListTile<String>(
-          title: const Text('PayPal'),
-          subtitle: const Text('Pay with your PayPal account'),
-          value: 'PayPal',
-          groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() {
-              _paymentMethod = value!;
-            });
-          },
-          secondary: const Icon(Icons.account_balance_wallet),
-        ),
-        RadioListTile<String>(
-          title: const Text('Cash on Delivery'),
-          subtitle: const Text('Pay when you receive your order'),
-          value: 'Cash on Delivery',
-          groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() {
-              _paymentMethod = value!;
-            });
-          },
-          secondary: const Icon(Icons.money),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReviewOrderStep(Cart cart) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Order Summary',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Items
-        ...cart.items.map((item) {
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                item.product.imageUrl,
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-            ),
-            title: Text(
-              item.product.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              'Qty: ${item.quantity}',
-              style: TextStyle(
-                color: Colors.grey[600],
-              ),
-            ),
-            trailing: Text(
-              '\$${item.totalPrice.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
-        }).toList(),
-
-        const Divider(),
-
-        // Subtotal
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Subtotal',
-              style: TextStyle(
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              '\$${cart.subtotal.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Shipping
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Shipping',
-              style: TextStyle(
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              cart.shipping > 0
-                  ? '\$${cart.shipping.toStringAsFixed(2)}'
-                  : 'Free',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: cart.shipping > 0 ? null : Colors.green,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Tax
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Tax',
-              style: TextStyle(
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              '\$${cart.tax.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        const Divider(),
-        const SizedBox(height: 8),
-
-        // Total
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Total',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            Text(
-              '\$${cart.total.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // Shipping Address
-        const Text(
-          'Shipping Address',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (_selectedAddress != null) ...[
-          Text(_selectedAddress!.name),
-          Text(_selectedAddress!.formattedAddress),
-        ] else ...[
-          const Text('No address selected'),
-        ],
-        const SizedBox(height: 16),
-
-        // Payment Method
-        const Text(
-          'Payment Method',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(_paymentMethod),
-      ],
     );
   }
 
@@ -548,7 +268,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildModernProgressIndicator() {
     final steps = ['Shipping', 'Payment', 'Review'];
-    
+
     return Column(
       children: [
         Row(
@@ -576,7 +296,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             final step = entry.value;
             final isActive = index == _currentStep;
             final isCompleted = index < _currentStep;
-            
+
             return Expanded(
               child: Row(
                 children: [
@@ -600,27 +320,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           : Text(
                               (index + 1).toString(),
                               style: TextStyle(
-                                color: isActive ? Colors.white : Colors.grey[600],
+                                color:
+                                    isActive ? Colors.white : Colors.grey[600],
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
                             ),
                     ),
                   ),
-                  
+
                   // Step Label
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       step,
                       style: TextStyle(
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                        color: isActive || isCompleted ? Colors.black87 : Colors.grey[600],
+                        fontWeight:
+                            isActive ? FontWeight.w600 : FontWeight.w400,
+                        color: isActive || isCompleted
+                            ? Colors.black87
+                            : Colors.grey[600],
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  
+
                   // Connection Line
                   if (index < steps.length - 1)
                     Expanded(
@@ -701,7 +425,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add Address'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
@@ -748,13 +473,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const Divider(height: 1),
           ...addressService.addresses.map((address) {
             final isSelected = _selectedAddress?.id == address.id;
-            
+
             return Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isSelected 
-                      ? Theme.of(context).primaryColor 
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
                       : Colors.grey[200]!,
                   width: isSelected ? 2 : 1,
                 ),
@@ -775,11 +500,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         width: 20,
                         height: 20,
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? Theme.of(context).primaryColor
                               : Colors.transparent,
                           border: Border.all(
-                            color: isSelected 
+                            color: isSelected
                                 ? Theme.of(context).primaryColor
                                 : Colors.grey[400]!,
                             width: 2,
@@ -930,13 +655,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const Divider(height: 1),
           ...paymentMethods.map((method) {
             final isSelected = _paymentMethod == method['value'];
-            
+
             return Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isSelected 
-                      ? Theme.of(context).primaryColor 
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
                       : Colors.grey[200]!,
                   width: isSelected ? 2 : 1,
                 ),
@@ -957,11 +682,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         width: 20,
                         height: 20,
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? Theme.of(context).primaryColor
                               : Colors.transparent,
                           border: Border.all(
-                            color: isSelected 
+                            color: isSelected
                                 ? Theme.of(context).primaryColor
                                 : Colors.grey[400]!,
                             width: 2,
@@ -1016,8 +741,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ],
                   ),
                 ),
-              );
-            };
+              ),
+            );
           }).toList(),
         ],
       ),
@@ -1062,7 +787,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const Divider(height: 1),
-          
+
           // Order Items
           Container(
             padding: const EdgeInsets.all(20),
@@ -1077,63 +802,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ...cart.items.map((item) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey[50],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            item.product.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => 
-                                Icon(Icons.image, color: Colors.grey[400]),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.product.name,
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              'Qty: ${item.quantity}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
+                ...cart.items
+                    .map((item) => Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey[50],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    item.product.imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) => Icon(
+                                            Icons.image,
+                                            color: Colors.grey[400]),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        '\$${(item.product.price * item.quantity).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                )).toList(),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.product.name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'Qty: ${item.quantity}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '\$${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ))
+                    .toList(),
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Pricing Summary
           Container(
             padding: const EdgeInsets.all(20),
@@ -1141,7 +871,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 _buildPriceRow('Subtotal', cart.subtotal),
                 const SizedBox(height: 8),
-                _buildPriceRow('Shipping', cart.shipping, isFree: cart.shipping == 0),
+                _buildPriceRow('Shipping', cart.shipping,
+                    isFree: cart.shipping == 0),
                 const SizedBox(height: 8),
                 _buildPriceRow('Tax', cart.tax),
                 const SizedBox(height: 16),
@@ -1247,18 +978,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   offset: const Offset(0, 6),
                 ),
               ],
-            ),              child: ElevatedButton(
-                onPressed: _isPlacingOrder ? null : () {
-                  setState(() {
-                    if (_currentStep < 2) {
-                      _currentStep += 1;
-                    } else {
-                      final cartService = Provider.of<CartService>(context, listen: false);
-                      final orderService = Provider.of<OrderService>(context, listen: false);
-                      _placeOrder(context, cartService.cart!, orderService);
-                    }
-                  });
-                },
+            ),
+            child: ElevatedButton(
+              onPressed: _isPlacingOrder
+                  ? null
+                  : () {
+                      setState(() {
+                        if (_currentStep < 2) {
+                          _currentStep += 1;
+                        } else {
+                          final cartService =
+                              Provider.of<CartService>(context, listen: false);
+                          final orderService =
+                              Provider.of<OrderService>(context, listen: false);
+                          _placeOrder(context, cartService.cart!, orderService);
+                        }
+                      });
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -1294,8 +1030,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
-                            _currentStep == 2 
-                                ? Icons.shopping_bag_rounded 
+                            _currentStep == 2
+                                ? Icons.shopping_bag_rounded
                                 : Icons.arrow_forward_rounded,
                             color: Colors.white,
                             size: 16,
