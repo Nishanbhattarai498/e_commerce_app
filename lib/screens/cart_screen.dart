@@ -60,7 +60,8 @@ class _CartScreenState extends State<CartScreen> {
             );
           }
 
-          final cart = cartService.cart;          if (cart == null || cart.items.isEmpty) {
+          final cart = cartService.cart;
+          if (cart == null || cart.items.isEmpty) {
             return Container(
               padding: const EdgeInsets.all(40),
               child: Column(
@@ -116,7 +117,8 @@ class _CartScreenState extends State<CartScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -146,7 +148,8 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             );
-          }          return Column(
+          }
+          return Column(
             children: [
               // Cart Header
               Container(
@@ -214,127 +217,150 @@ class _CartScreenState extends State<CartScreen> {
                     return _buildModernCartItem(context, item, cartService);
                   },
                 ),
-              ),
-
-              // Cart Summary
+              ), // Modern Cart Summary
               Container(
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: const Offset(0, -3),
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    // Subtotal
+                    // Order Summary Header
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Subtotal',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                          ),
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          color: Theme.of(context).primaryColor,
+                          size: 20,
                         ),
-                        Text(
-                          '\$${cart.subtotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Order Summary',
+                          style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 20),
+
+                    // Subtotal
+                    _buildSummaryRow(
+                      'Subtotal',
+                      '\$${cart.subtotal.toStringAsFixed(2)}',
+                      isSubtext: true,
+                    ),
+                    const SizedBox(height: 12),
 
                     // Shipping
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Shipping',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        Text(
-                          cart.shipping > 0
-                              ? '\$${cart.shipping.toStringAsFixed(2)}'
-                              : 'Free',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: cart.shipping > 0 ? null : Colors.green,
-                          ),
-                        ),
-                      ],
+                    _buildSummaryRow(
+                      'Shipping',
+                      cart.shipping > 0
+                          ? '\$${cart.shipping.toStringAsFixed(2)}'
+                          : 'Free',
+                      isSubtext: true,
+                      isFree: cart.shipping == 0,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
                     // Tax
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Tax',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        Text(
-                          '\$${cart.tax.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(),
-                    const SizedBox(height: 8),
-
-                    // Total
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          '\$${cart.total.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
+                    _buildSummaryRow(
+                      'Tax',
+                      '\$${cart.tax.toStringAsFixed(2)}',
+                      isSubtext: true,
                     ),
                     const SizedBox(height: 16),
 
-                    // Checkout Button
-                    SizedBox(
+                    Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.grey[200]!,
+                            Colors.grey[100]!,
+                            Colors.grey[200]!,
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Total
+                    _buildSummaryRow(
+                      'Total',
+                      '\$${cart.total.toStringAsFixed(2)}',
+                      isTotal: true,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Modern Checkout Button
+                    Container(
                       width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor.withOpacity(0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                Theme.of(context).primaryColor.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/checkout');
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text(
-                          'Proceed to Checkout',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Proceed to Checkout',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -470,7 +496,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                     ),
-                  
+
                   const SizedBox(height: 12),
 
                   // Price and Quantity Row
@@ -518,7 +544,7 @@ class _CartScreenState extends State<CartScreen> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: item.quantity > 1 
+                color: item.quantity > 1
                     ? Theme.of(context).primaryColor.withOpacity(0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
@@ -526,7 +552,7 @@ class _CartScreenState extends State<CartScreen> {
               child: Icon(
                 Icons.remove_rounded,
                 size: 18,
-                color: item.quantity > 1 
+                color: item.quantity > 1
                     ? Theme.of(context).primaryColor
                     : Colors.grey[400],
               ),
@@ -699,6 +725,40 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isSubtext = false,
+    bool isTotal = false,
+    bool isFree = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isTotal ? 18 : 16,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
+            color: isSubtext && !isTotal ? Colors.grey[700] : Colors.black87,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isTotal ? 18 : 16,
+            fontWeight: FontWeight.bold,
+            color: isFree
+                ? Colors.green
+                : isTotal
+                    ? Theme.of(context).primaryColor
+                    : Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

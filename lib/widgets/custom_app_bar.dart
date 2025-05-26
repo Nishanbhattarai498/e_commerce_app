@@ -42,7 +42,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               ),
-              
+
               // Search Button
               Container(
                 width: 44,
@@ -63,7 +63,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   },
                 ),
               ),
-              
+
               // Cart Button with Badge
               Container(
                 width: 44,
@@ -99,7 +99,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                             minHeight: 18,
                           ),
                           child: Text(
-                            cartItemCount > 99 ? '99+' : cartItemCount.toString(),
+                            cartItemCount > 99
+                                ? '99+'
+                                : cartItemCount.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -112,7 +114,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ],
                 ),
               ),
-              
+
               // Account Button
               Container(
                 width: 44,
@@ -136,6 +138,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
+
   @override
   Size get preferredSize => const Size.fromHeight(80);
 }

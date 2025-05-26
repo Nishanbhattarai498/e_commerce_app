@@ -58,7 +58,8 @@ class ProductCard extends StatelessWidget {
                         child: const Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.teal),
                           ),
                         ),
                       ),
@@ -82,14 +83,15 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 // Sale badge
                 if (product.isOnSale)
                   Positioned(
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(12),
@@ -104,7 +106,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                
+
                 // Favorite button
                 Positioned(
                   top: 12,
@@ -131,7 +133,7 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),            // Product Info
+            ), // Product Info
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -212,7 +214,7 @@ class ProductCard extends StatelessWidget {
                           ],
                         ],
                       ),
-                      
+
                       // Add to cart button
                       Container(
                         width: 32,

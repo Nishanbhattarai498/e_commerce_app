@@ -231,7 +231,9 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                   label,
                   style: TextStyle(
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.black87,
                   ),
                 ),
                 trailing: isSelected
@@ -331,7 +333,9 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                   category.name,
                   style: TextStyle(
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.black87,
                   ),
                 ),
                 trailing: isSelected
@@ -484,7 +488,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
             ),
           ),
 
-          const SizedBox(height: 20),          // Modern Product Grid
+          const SizedBox(height: 20), // Modern Product Grid
           Expanded(
             child: Consumer<ProductService>(
               builder: (context, productService, _) {
@@ -553,7 +557,8 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                 }
 
                 return GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.75,
