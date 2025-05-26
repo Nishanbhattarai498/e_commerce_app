@@ -68,7 +68,8 @@ class MyApp extends StatelessWidget {
             background: const Color(0xFFF8F9FA),
           ),
           scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).copyWith(
+          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
+              .copyWith(
             displayLarge: GoogleFonts.poppins(
               fontSize: 32,
               fontWeight: FontWeight.w700,
@@ -152,9 +153,11 @@ class MyApp extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.5),
+              borderSide:
+                  const BorderSide(color: Color(0xFFFF6B6B), width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             hintStyle: GoogleFonts.poppins(
               color: Colors.grey[500],
               fontSize: 14,
