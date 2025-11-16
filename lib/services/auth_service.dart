@@ -112,6 +112,57 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  Future<void> sendEmailOtp({
+    required String email,
+    bool shouldCreateUser = false,
+    String? firstName,
+    String? lastName,
+  }) async {
+    _setLoading(true);
+    try {
+      final metadata = <String, dynamic>{};
+      if (firstName != null && firstName.isNotEmpty) {
+        metadata['first_name'] = firstName;
+      }
+      if (lastName != null && lastName.isNotEmpty) {
+        metadata['last_name'] = lastName;
+      }
+
+      await _supabaseService.sendEmailOtp(
+        email: email,
+        shouldCreateUser: shouldCreateUser,
+        data: metadata.isEmpty ? null : metadata,
+      );
+    } catch (e) {
+      debugPrint('Error sending email OTP: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {
+    _setLoading(true);
+    try {
+      final response = await _supabaseService.verifyEmailOtp(
+        email: email,
+        token: token,
+      );
+
+      if (response.user != null) {
+        await _fetchProfile();
+      }
+    } catch (e) {
+      debugPrint('Error verifying email OTP: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> updateProfile({
     String? firstName,
     String? lastName,

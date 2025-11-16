@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 
@@ -14,46 +15,121 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  bool _obscurePassword = true;
+  final _otpController = TextEditingController();
+  bool _otpSent = false;
   AuthMode _mode = AuthMode.login;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     _nameController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
   bool get _isLogin => _mode == AuthMode.login;
 
+  void _resetOtpState() {
+    if (!_otpSent) return;
+    setState(() {
+      _otpSent = false;
+      _otpController.clear();
+    });
+  }
+
+  Future<void> _resendOtp() async {
+    if (_emailController.text.trim().isEmpty ||
+        !_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid email first.')),
+      );
+      return;
+    }
+
+    final authService = context.read<AuthService>();
+    final email = _emailController.text.trim();
+
+    try {
+      String? firstName;
+      String? lastName;
+      if (!_isLogin && _nameController.text.trim().isNotEmpty) {
+        final names = _nameController.text.trim().split(' ');
+        firstName = names.isNotEmpty ? names.first : null;
+        lastName = names.length > 1 ? names.sublist(1).join(' ') : null;
+      }
+
+      await authService.sendEmailOtp(
+        email: email,
+        shouldCreateUser: !_isLogin,
+        firstName: firstName,
+        lastName: lastName,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('New code sent to $email')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final authService = context.read<AuthService>();
+    final email = _emailController.text.trim();
 
     try {
-      if (_isLogin) {
-        await authService.signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
-      } else {
-        final names = _nameController.text.trim().split(' ');
-        final firstName = names.isNotEmpty ? names.first : '';
-        final lastName = names.length > 1 ? names.sublist(1).join(' ') : '';
-        await authService.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+      if (!_otpSent) {
+        String? firstName;
+        String? lastName;
+
+        if (!_isLogin && _nameController.text.trim().isNotEmpty) {
+          final names = _nameController.text.trim().split(' ');
+          firstName = names.isNotEmpty ? names.first : null;
+          lastName = names.length > 1 ? names.sublist(1).join(' ') : null;
+        }
+
+        await authService.sendEmailOtp(
+          email: email,
+          shouldCreateUser: !_isLogin,
           firstName: firstName,
           lastName: lastName,
         );
-      }
 
-      if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+        if (!mounted) return;
+        setState(() {
+          _otpSent = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'We sent a 6-digit code to $email. Enter it below to continue.',
+            ),
+          ),
+        );
+      } else {
+        final otp = _otpController.text.trim();
+        if (otp.length < 6) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Enter the 6-digit code.')),
+          );
+          return;
+        }
+
+        await authService.verifyEmailOtp(
+          email: email,
+          token: otp,
+        );
+
+        if (!mounted) return;
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -180,7 +256,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   final isSelected = _mode == mode;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _mode = mode),
+                      onTap: () {
+                        if (_mode == mode) return;
+                        setState(() {
+                          _mode = mode;
+                          _otpSent = false;
+                          _otpController.clear();
+                        });
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
@@ -232,6 +315,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 labelText: 'Email address',
                 prefixIcon: Icon(Icons.email_outlined),
               ),
+              onChanged: (_) => _resetOtpState(),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Email required';
@@ -243,64 +327,56 @@ class _AuthScreenState extends State<AuthScreen> {
               },
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
-                  onPressed: () => setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  }),
+            if (_otpSent) ...[
+              Text(
+                'Enter the 6-digit code we emailed to you.',
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'One-time code',
+                  prefixIcon: Icon(Icons.shield_outlined),
+                  counterText: '',
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.length < 6) {
-                  return 'Minimum 6 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            if (_isLogin)
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    final email = _emailController.text.trim();
-                    if (email.isEmpty || !email.contains('@')) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Enter your email to reset password'),
-                        ),
-                      );
-                      return;
-                    }
-                    context.read<AuthService>().resetPassword(email).then((_) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Password reset link sent to your email'),
-                        ),
-                      );
-                    }).catchError((error) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error.toString())),
-                      );
-                    });
-                  },
-                  child: const Text('Forgot password?'),
+                child: TextButton.icon(
+                  onPressed: isLoading ? null : _resendOtp,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Resend code'),
                 ),
               ),
-            const SizedBox(height: 8),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.lock_clock_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'We send a secure OTP to your email. Enter it to ${_isLogin ? 'sign in instantly' : 'finish creating your account'}.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -317,7 +393,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Text(_isLogin ? 'Sign In' : 'Create Account'),
+                    : Text(_otpSent ? 'Verify & Continue' : 'Send OTP'),
               ),
             ),
             const SizedBox(height: 16),

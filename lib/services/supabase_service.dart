@@ -72,6 +72,40 @@ class SupabaseService {
     }
   }
 
+  Future<void> sendEmailOtp({
+    required String email,
+    bool shouldCreateUser = false,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      await _client.auth.signInWithOtp(
+        email: email,
+        shouldCreateUser: shouldCreateUser,
+        data: data,
+      );
+    } catch (e) {
+      debugPrint('Error sending email OTP: $e');
+      rethrow;
+    }
+  }
+
+  Future<AuthResponse> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {
+    try {
+      final response = await _client.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.email,
+      );
+      return response;
+    } catch (e) {
+      debugPrint('Error verifying email OTP: $e');
+      rethrow;
+    }
+  }
+
   User? get currentUser => _client.auth.currentUser;
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
