@@ -31,8 +31,9 @@ class AppProviders extends StatelessWidget {
           create: (_) => SupabaseService(),
         ),
         ChangeNotifierProxyProvider<SupabaseService, AuthService>(
-          create: (context) => AuthService(),
-          update: (_, supabaseService, previous) => previous ?? AuthService(),
+          create: (context) => AuthService()..initialize(),
+          update: (_, supabaseService, previous) =>
+              previous ?? (AuthService()..initialize()),
         ),
         ChangeNotifierProxyProvider<SupabaseService, ProductService>(
           create: (context) => ProductService(

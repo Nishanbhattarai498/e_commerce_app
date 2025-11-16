@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers.dart';
+import 'screens/splash_screen.dart';
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/product_listing_screen.dart';
 import 'screens/product_detail_screen.dart';
@@ -67,6 +69,7 @@ class MyApp extends StatelessWidget {
             surface: const Color(0xFFFAFAFA),
             background: const Color(0xFFF8F9FA),
           ),
+          primaryColor: const Color(0xFF6C63FF),
           scaffoldBackgroundColor: const Color(0xFFF8F9FA),
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
               .copyWith(
@@ -223,7 +226,9 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const HomeScreen(),
+          '/': (context) => const SplashScreen(),
+          '/auth': (context) => const AuthScreen(),
+          '/home': (context) => const HomeScreen(),
           '/products': (context) => const ProductListingScreen(),
           '/product': (context) => const ProductDetailScreen(),
           '/cart': (context) => const CartScreen(),

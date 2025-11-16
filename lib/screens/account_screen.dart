@@ -17,15 +17,6 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   int _currentIndex = 4;
 
-  // Form controllers
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-
-  // Tab controller
-  final _tabController = PageController();
-  int _selectedTabIndex = 0;
-
   @override
   void initState() {
     super.initState();
@@ -40,15 +31,6 @@ class _AccountScreenState extends State<AccountScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    _tabController.dispose();
-    super.dispose();
-  }
-
   void _onNavBarTap(int index) {
     setState(() {
       _currentIndex = index;
@@ -57,7 +39,7 @@ class _AccountScreenState extends State<AccountScreen> {
     // Navigate to the appropriate screen
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(context, '/');
+        Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/products');
@@ -81,7 +63,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           body: authService.isAuthenticated
               ? _buildLoggedInView(authService)
-              : _buildAuthView(authService),
+              : _buildGuestView(context),
           bottomNavigationBar: BottomNavBar(
             currentIndex: _currentIndex,
             onTap: _onNavBarTap,
@@ -91,399 +73,184 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildAuthView(AuthService authService) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  Widget _buildGuestView(BuildContext context) {
+    final theme = Theme.of(context);
+    final perks = [
+      {
+        'icon': Icons.local_shipping_outlined,
+        'title': 'Track your orders',
+        'subtitle': 'Live updates from purchase to delivery.',
+      },
+      {
+        'icon': Icons.favorite_outline,
+        'title': 'Wishlist sync',
+        'subtitle': 'Save favorites across every device.',
+      },
+      {
+        'icon': Icons.notifications_outlined,
+        'title': 'Personal alerts',
+        'subtitle': 'Price drops and back-in-stock reminders.',
+      },
+    ];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tab Selector
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTabIndex = 0;
-                    });
-                    _tabController.animateToPage(
-                      0,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _selectedTabIndex == 0
-                              ? Theme.of(context).primaryColor
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Login',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: _selectedTabIndex == 0
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: _selectedTabIndex == 0
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey[700],
-                      ),
-                    ),
-                  ),
-                ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withOpacity(0.8),
+                ],
               ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTabIndex = 1;
-                    });
-                    _tabController.animateToPage(
-                      1,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _selectedTabIndex == 1
-                              ? Theme.of(context).primaryColor
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Sign Up',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: _selectedTabIndex == 1
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: _selectedTabIndex == 1
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey[700],
-                      ),
-                    ),
-                  ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
                 ),
-              ),
-            ],
-          ),
-
-          // Tab Content
-          Expanded(
-            child: PageView(
-              controller: _tabController,
-              onPageChanged: (index) {
-                setState(() {
-                  _selectedTabIndex = index;
-                });
-              },
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Login Tab
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Welcome Back',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Sign in to your account to continue shopping',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock),
-                            suffixIcon: Icon(Icons.visibility_off),
-                          ),
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // Show reset password dialog
-                              _showResetPasswordDialog(context);
-                            },
-                            child: const Text('Forgot Password?'),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: authService.isLoading
-                                ? null
-                                : () async {
-                                    try {
-                                      await authService.signIn(
-                                        email: _emailController.text.trim(),
-                                        password: _passwordController.text,
-                                      );
-                                      // Fetch user data after login
-                                      if (authService.isAuthenticated) {
-                                        Provider.of<AddressService>(context,
-                                                listen: false)
-                                            .fetchAddresses();
-                                        Provider.of<OrderService>(context,
-                                                listen: false)
-                                            .fetchOrders();
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text('Login failed: $e')),
-                                      );
-                                    }
-                                  },
-                            child: authService.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Login'),
-                          ),
-                        ),
-                      ],
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.white,
+                      ),
                     ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/auth');
+                      },
+                      child: const Text(
+                        'Already have an account?',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Create your Luxe ID',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                // Sign Up Tab
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Create Account',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Sign up to get started with shopping',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Full Name',
-                            prefixIcon: Icon(Icons.person),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock),
-                            suffixIcon: Icon(Icons.visibility_off),
-                          ),
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: true,
-                              onChanged: (value) {},
-                            ),
-                            Expanded(
-                              child: Text(
-                                'I agree to the Terms of Service and Privacy Policy',
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: authService.isLoading
-                                ? null
-                                : () async {
-                                    final nameParts =
-                                        _nameController.text.trim().split(' ');
-                                    final firstName = nameParts.isNotEmpty
-                                        ? nameParts.first
-                                        : '';
-                                    final lastName = nameParts.length > 1
-                                        ? nameParts.sublist(1).join(' ')
-                                        : '';
-
-                                    try {
-                                      await authService.signUp(
-                                        email: _emailController.text.trim(),
-                                        password: _passwordController.text,
-                                        firstName: firstName,
-                                        lastName: lastName,
-                                      );
-                                      // Fetch user data after signup
-                                      if (authService.isAuthenticated) {
-                                        Provider.of<AddressService>(context,
-                                                listen: false)
-                                            .fetchAddresses();
-                                        Provider.of<OrderService>(context,
-                                                listen: false)
-                                            .fetchOrders();
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content:
-                                                Text('Sign up failed: $e')),
-                                      );
-                                    }
-                                  },
-                            child: authService.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Sign Up'),
-                          ),
-                        ),
-                      ],
+                const SizedBox(height: 8),
+                Text(
+                  'Sync carts, track orders, and unlock personalized picks.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withOpacity(0.85),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/auth'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: theme.colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
+                    child: const Text('Sign in or create account'),
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showResetPasswordDialog(BuildContext context) {
-    final emailController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Enter your email address and we\'ll send you a link to reset your password.',
+          const SizedBox(height: 32),
+          Text(
+            'Why join?',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
           ),
-          Consumer<AuthService>(
-            builder: (context, authService, _) {
-              return ElevatedButton(
-                onPressed: authService.isLoading
-                    ? null
-                    : () async {
-                        try {
-                          await authService
-                              .resetPassword(emailController.text.trim());
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Password reset email sent. Check your inbox.'),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text('Failed to send reset email: $e')),
-                          );
-                        }
-                      },
-                child: authService.isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+          const SizedBox(height: 16),
+          ...perks.map(
+            (perk) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      perk['icon'] as IconData,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          perk['title'] as String,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
-                      )
-                    : const Text('Send Reset Link'),
-              );
+                        const SizedBox(height: 6),
+                        Text(
+                          perk['subtitle'] as String,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/home');
             },
+            icon: const Icon(Icons.explore_outlined),
+            label: const Text('Continue as guest'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
           ),
         ],
       ),
@@ -587,6 +354,12 @@ class _AccountScreenState extends State<AccountScreen> {
                       : () async {
                           try {
                             await authService.signOut();
+                            if (!mounted) return;
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/auth',
+                              (route) => false,
+                            );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Failed to sign out: $e')),

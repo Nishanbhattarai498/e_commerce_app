@@ -32,7 +32,7 @@ class _CartScreenState extends State<CartScreen> {
     // Navigate to the appropriate screen
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(context, '/');
+        Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/products');

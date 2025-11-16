@@ -395,7 +395,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               // Navigate to the appropriate screen
               switch (index) {
                 case 0:
-                  Navigator.pushReplacementNamed(context, '/');
+                  Navigator.pushReplacementNamed(context, '/home');
                   break;
                 case 3:
                   Navigator.pushNamed(context, '/cart');
