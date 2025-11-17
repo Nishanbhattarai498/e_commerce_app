@@ -112,7 +112,7 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<void> sendEmailOtp({
+  Future<void> sendMagicLink({
     required String email,
     bool shouldCreateUser = false,
     String? firstName,
@@ -128,35 +128,16 @@ class AuthService extends ChangeNotifier {
         metadata['last_name'] = lastName;
       }
 
-      await _supabaseService.sendEmailOtp(
+      final redirectTo = kIsWeb ? null : 'io.supabase.flutter://login-callback';
+
+      await _supabaseService.sendMagicLink(
         email: email,
         shouldCreateUser: shouldCreateUser,
         data: metadata.isEmpty ? null : metadata,
+        emailRedirectTo: redirectTo,
       );
     } catch (e) {
-      debugPrint('Error sending email OTP: $e');
-      rethrow;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> verifyEmailOtp({
-    required String email,
-    required String token,
-  }) async {
-    _setLoading(true);
-    try {
-      final response = await _supabaseService.verifyEmailOtp(
-        email: email,
-        token: token,
-      );
-
-      if (response.user != null) {
-        await _fetchProfile();
-      }
-    } catch (e) {
-      debugPrint('Error verifying email OTP: $e');
+      debugPrint('Error sending magic link: $e');
       rethrow;
     } finally {
       _setLoading(false);

@@ -72,36 +72,21 @@ class SupabaseService {
     }
   }
 
-  Future<void> sendEmailOtp({
+  Future<void> sendMagicLink({
     required String email,
     bool shouldCreateUser = false,
     Map<String, dynamic>? data,
+    String? emailRedirectTo,
   }) async {
     try {
       await _client.auth.signInWithOtp(
         email: email,
         shouldCreateUser: shouldCreateUser,
         data: data,
+        emailRedirectTo: emailRedirectTo,
       );
     } catch (e) {
-      debugPrint('Error sending email OTP: $e');
-      rethrow;
-    }
-  }
-
-  Future<AuthResponse> verifyEmailOtp({
-    required String email,
-    required String token,
-  }) async {
-    try {
-      final response = await _client.auth.verifyOTP(
-        email: email,
-        token: token,
-        type: OtpType.email,
-      );
-      return response;
-    } catch (e) {
-      debugPrint('Error verifying email OTP: $e');
+      debugPrint('Error sending magic link: $e');
       rethrow;
     }
   }

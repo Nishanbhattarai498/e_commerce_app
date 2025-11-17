@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 
@@ -16,50 +15,39 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
-  final _otpController = TextEditingController();
-  bool _otpSent = false;
+  bool _linkSent = false;
   AuthMode _mode = AuthMode.login;
 
   @override
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
   bool get _isLogin => _mode == AuthMode.login;
 
-  void _resetOtpState() {
-    if (!_otpSent) return;
-    setState(() {
-      _otpSent = false;
-      _otpController.clear();
-    });
+  void _resetLinkState() {
+    if (!_linkSent) return;
+    setState(() => _linkSent = false);
   }
 
-  Future<void> _resendOtp() async {
-    if (_emailController.text.trim().isEmpty ||
-        !_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid email first.')),
-      );
-      return;
-    }
-
+  Future<void> _submit({bool isResend = false}) async {
+    if (!_formKey.currentState!.validate()) return;
     final authService = context.read<AuthService>();
     final email = _emailController.text.trim();
 
     try {
       String? firstName;
       String? lastName;
+
       if (!_isLogin && _nameController.text.trim().isNotEmpty) {
         final names = _nameController.text.trim().split(' ');
         firstName = names.isNotEmpty ? names.first : null;
         lastName = names.length > 1 ? names.sublist(1).join(' ') : null;
       }
 
-      await authService.sendEmailOtp(
+      await authService.sendMagicLink(
         email: email,
         shouldCreateUser: !_isLogin,
         firstName: firstName,
@@ -67,69 +55,16 @@ class _AuthScreenState extends State<AuthScreen> {
       );
 
       if (!mounted) return;
+      setState(() => _linkSent = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('New code sent to $email')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final authService = context.read<AuthService>();
-    final email = _emailController.text.trim();
-
-    try {
-      if (!_otpSent) {
-        String? firstName;
-        String? lastName;
-
-        if (!_isLogin && _nameController.text.trim().isNotEmpty) {
-          final names = _nameController.text.trim().split(' ');
-          firstName = names.isNotEmpty ? names.first : null;
-          lastName = names.length > 1 ? names.sublist(1).join(' ') : null;
-        }
-
-        await authService.sendEmailOtp(
-          email: email,
-          shouldCreateUser: !_isLogin,
-          firstName: firstName,
-          lastName: lastName,
-        );
-
-        if (!mounted) return;
-        setState(() {
-          _otpSent = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'We sent a 6-digit code to $email. Enter it below to continue.',
-            ),
+        SnackBar(
+          content: Text(
+            isResend
+                ? 'A fresh magic link is on its way to $email.'
+                : 'Magic link sent to $email. Tap it on this device to finish signing in.',
           ),
-        );
-      } else {
-        final otp = _otpController.text.trim();
-        if (otp.length < 6) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Enter the 6-digit code.')),
-          );
-          return;
-        }
-
-        await authService.verifyEmailOtp(
-          email: email,
-          token: otp,
-        );
-
-        if (!mounted) return;
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
-      }
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -260,8 +195,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         if (_mode == mode) return;
                         setState(() {
                           _mode = mode;
-                          _otpSent = false;
-                          _otpController.clear();
+                          _linkSent = false;
                         });
                       },
                       child: AnimatedContainer(
@@ -315,7 +249,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 labelText: 'Email address',
                 prefixIcon: Icon(Icons.email_outlined),
               ),
-              onChanged: (_) => _resetOtpState(),
+              onChanged: (_) => _resetLinkState(),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Email required';
@@ -327,34 +261,48 @@ class _AuthScreenState extends State<AuthScreen> {
               },
             ),
             const SizedBox(height: 16),
-            if (_otpSent) ...[
-              Text(
-                'Enter the 6-digit code we emailed to you.',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'One-time code',
-                  prefixIcon: Icon(Icons.shield_outlined),
-                  counterText: '',
+            if (_linkSent)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: isLoading ? null : _resendOtp,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Resend code'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.check_circle_outline, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text(
+                          'Magic link sent',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Open the email on this device and tap the link to complete ${_isLogin ? 'sign-in' : 'setup'}. If you do not see it, check spam or resend below.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed:
+                            isLoading ? null : () => _submit(isResend: true),
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Resend link'),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ] else ...[
+              )
+            else
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -364,23 +312,22 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.lock_clock_outlined),
+                    const Icon(Icons.link_rounded),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'We send a secure OTP to your email. Enter it to ${_isLogin ? 'sign in instantly' : 'finish creating your account'}.',
+                        'We will email a secure login link. Open it on this device and you will be signed in automatically—no password needed.',
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : _submit,
+                onPressed: isLoading ? null : () => _submit(),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -393,7 +340,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Text(_otpSent ? 'Verify & Continue' : 'Send OTP'),
+                    : Text(_linkSent ? 'Send Again' : 'Send Magic Link'),
               ),
             ),
             const SizedBox(height: 16),
