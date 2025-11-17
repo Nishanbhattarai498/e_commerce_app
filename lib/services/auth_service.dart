@@ -128,7 +128,8 @@ class AuthService extends ChangeNotifier {
         metadata['last_name'] = lastName;
       }
 
-      final redirectTo = kIsWeb ? null : 'io.supabase.flutter://login-callback';
+      final redirectTo =
+          kIsWeb ? Uri.base.origin : 'io.supabase.flutter://login-callback';
 
       await _supabaseService.sendMagicLink(
         email: email,
@@ -138,6 +139,28 @@ class AuthService extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error sending magic link: $e');
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> signInWithProvider({
+    required OAuthProvider provider,
+    String? scopes,
+  }) async {
+    _setLoading(true);
+    try {
+      final redirectTo =
+          kIsWeb ? Uri.base.origin : 'io.supabase.flutter://login-callback';
+
+      await _supabaseService.signInWithOAuth(
+        provider: provider,
+        redirectTo: redirectTo,
+        scopes: scopes,
+      );
+    } catch (e) {
+      debugPrint('Error signing in with provider $provider: $e');
       rethrow;
     } finally {
       _setLoading(false);

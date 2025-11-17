@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 
 enum AuthMode { login, signup }
@@ -16,6 +17,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
   bool _linkSent = false;
+  bool _navigatedAway = false;
   AuthMode _mode = AuthMode.login;
 
   @override
@@ -30,6 +32,35 @@ class _AuthScreenState extends State<AuthScreen> {
   void _resetLinkState() {
     if (!_linkSent) return;
     setState(() => _linkSent = false);
+  }
+
+  void _maybeNavigateHome(AuthService authService) {
+    if (_navigatedAway || !authService.isAuthenticated) return;
+    _navigatedAway = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+    });
+  }
+
+  Future<void> _handleOAuthSignIn(
+    OAuthProvider provider, {
+    String? scopes,
+  }) async {
+    final authService = context.read<AuthService>();
+
+    try {
+      await authService.signInWithProvider(
+        provider: provider,
+        scopes: scopes,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   Future<void> _submit({bool isResend = false}) async {
@@ -77,6 +108,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authService = context.watch<AuthService>();
+    _maybeNavigateHome(authService);
 
     return Scaffold(
       body: Container(
@@ -382,9 +414,36 @@ class _AuthScreenState extends State<AuthScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildSocialButton(Icons.apple, 'Apple'),
-                _buildSocialButton(Icons.g_mobiledata, 'Google'),
-                _buildSocialButton(Icons.facebook, 'Facebook'),
+                _buildSocialButton(
+                  icon: Icons.apple,
+                  label: 'Apple',
+                  isLoading: isLoading,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Apple sign-in is coming soon'),
+                      ),
+                    );
+                  },
+                ),
+                _buildSocialButton(
+                  icon: Icons.g_mobiledata,
+                  label: 'Google',
+                  isLoading: isLoading,
+                  onPressed: () => _handleOAuthSignIn(
+                    OAuthProvider.google,
+                    scopes: 'email profile',
+                  ),
+                ),
+                _buildSocialButton(
+                  icon: Icons.facebook,
+                  label: 'Facebook',
+                  isLoading: isLoading,
+                  onPressed: () => _handleOAuthSignIn(
+                    OAuthProvider.facebook,
+                    scopes: 'email public_profile',
+                  ),
+                ),
               ],
             ),
           ],
@@ -393,18 +452,17 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildSocialButton(IconData icon, String label) {
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    required bool isLoading,
+    required VoidCallback? onPressed,
+  }) {
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 6),
         child: OutlinedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('$label sign-in coming soon'),
-              ),
-            );
-          },
+          onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),

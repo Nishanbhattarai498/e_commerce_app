@@ -91,6 +91,23 @@ class SupabaseService {
     }
   }
 
+  Future<void> signInWithOAuth({
+    required OAuthProvider provider,
+    String? redirectTo,
+    String? scopes,
+  }) async {
+    try {
+      await _client.auth.signInWithOAuth(
+        provider,
+        redirectTo: redirectTo,
+        scopes: scopes,
+      );
+    } catch (e) {
+      debugPrint('Error signing in with $provider: $e');
+      rethrow;
+    }
+  }
+
   User? get currentUser => _client.auth.currentUser;
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
